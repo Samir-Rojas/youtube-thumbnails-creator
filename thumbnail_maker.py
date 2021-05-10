@@ -23,23 +23,46 @@ def make_thumbnail(show=False):
     matchup = Image.open('temp.jpg')
 
     # add text
+    _add_text(SIZE, logo, matchup)
+
+    # export final image
+    _export(matchup, show)
+
+
+def _export(matchup, show):
+    matchup.save(data.export_filename, quality=95)
+    if show:
+        matchup.show()
+
+
+def _add_text(SIZE, logo, matchup):
     fontpath = settings.fontpath
     font = ImageFont.truetype(fontpath, settings.fontsize)
     draw = ImageDraw.Draw(matchup)
     fulltext = data.fulltext
     fulltext_width, fulltext_height = draw.textsize(fulltext, font=font)
     words = fulltext.split()
+    
     # if you need to change the separation between words and lines, change "sep" var in settings.py
-    start_x = SIZE[0]//2 - fulltext_width//2 - settings.sep//2
-    start_y = matchup.size[1]//2 - logo.size[1]
-    start_pos = (start_x, start_y)
-    next_pos = ()
+    start_pos = _calculate_text_start(SIZE, fulltext_width, logo, matchup)
 
     # if logo was resized, check if text is outside image boundary
-    if start_y < 0:
-        # set text to top margin of image
-        start_pos = (start_x, settings.padding)
+    start_pos = _set_text_from_image_boundary(start_pos)
 
+    _draw_text_and_lines(draw, font, start_pos, words)
+
+
+def _calculate_text_start(SIZE, fulltext_width, logo, matchup):
+    start_x = SIZE[0] // 2 - fulltext_width // 2 - settings.sep // 2
+    start_y = matchup.size[1] // 2 - logo.size[1]
+    start_pos = (start_x, start_y)
+    return start_pos
+
+
+def _draw_text_and_lines(draw, font, start_pos, words):
+    start_x = start_pos[0]
+    next_pos = ()
+    
     for i in range(len(words)):
         textwidth, textheight = draw.textsize(words[i], font=font)
         if i == 0:
@@ -50,16 +73,21 @@ def make_thumbnail(show=False):
         start_x += textwidth + (settings.sep // 2)
         # draw line
         linewidth = settings.fontsize // 10
+        
         # remove the if statement if you want to draw a line after the last word
         if i != len(words) - 1:
             draw.line((start_x, start_pos[1], start_x, start_pos[1] + settings.fontsize),
                       fill=settings.line_color, width=linewidth)
+        
         # add space after line
         start_x += settings.sep // 2
         # update next word's position
         next_pos = (start_x, start_pos[1])
 
-    # export final image
-    matchup.save(data.export_filename, quality=95)
-    if show:
-        matchup.show()
+
+def _set_text_from_image_boundary(start_pos):
+    # if logo was resized, check if text is outside image boundary
+    if start_pos[1] < 0:
+        # set text to top margin of image
+        start_pos = (start_pos[0], settings.padding)
+        return start_pos
