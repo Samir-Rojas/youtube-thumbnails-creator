@@ -29,12 +29,6 @@ def make_thumbnail(show=False):
     _export(matchup, show)
 
 
-def _export(matchup, show):
-    matchup.save(data.export_filename, quality=95)
-    if show:
-        matchup.show()
-
-
 def _add_text(SIZE, logo, matchup):
     fontpath = settings.fontpath
     font = ImageFont.truetype(fontpath, settings.fontsize)
@@ -56,6 +50,14 @@ def _calculate_text_start(SIZE, fulltext_width, logo, matchup):
     start_x = SIZE[0] // 2 - fulltext_width // 2 - settings.sep // 2
     start_y = matchup.size[1] // 2 - logo.size[1]
     start_pos = (start_x, start_y)
+    return start_pos
+
+
+def _set_text_from_image_boundary(start_pos):
+    # if logo was resized, check if text is outside image boundary
+    if start_pos[1] < 0:
+        # set text to top margin of image
+        start_pos = (start_pos[0], settings.padding)
     return start_pos
 
 
@@ -85,9 +87,7 @@ def _draw_text_and_lines(draw, font, start_pos, words):
         next_pos = (start_x, start_pos[1])
 
 
-def _set_text_from_image_boundary(start_pos):
-    # if logo was resized, check if text is outside image boundary
-    if start_pos[1] < 0:
-        # set text to top margin of image
-        start_pos = (start_pos[0], settings.padding)
-    return start_pos
+def _export(matchup, show):
+    matchup.save(data.export_filename, quality=95)
+    if show:
+        matchup.show()
