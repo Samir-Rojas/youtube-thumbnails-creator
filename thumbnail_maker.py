@@ -90,4 +90,4 @@ def _set_text_from_image_boundary(start_pos):
     if start_pos[1] < 0:
         # set text to top margin of image
         start_pos = (start_pos[0], settings.padding)
-        return start_pos
+    return start_pos
